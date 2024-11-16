@@ -25,7 +25,7 @@ class SocketController @Autowired constructor(val gameManager: GameManager) {
     @SendToUser("/private/bot_receiver")
     fun move(message: MoveC2SPacket, user: Principal): DebugS2CPacket {
         val game = gameManager.getGame(user) ?: throw IllegalArgumentException("Game not found for user ${user.name}")
-        game.move()
+        game.handleUserMove(message)
         return DebugS2CPacket("Move registered! Please wait for the bot to respond!")
     }
 }
