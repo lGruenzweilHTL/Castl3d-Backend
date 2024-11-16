@@ -16,16 +16,17 @@ class SocketController @Autowired constructor(val gameManager: GameManager) {
     @SendToUser("/private/receiver/debug")
     fun startGame(message: StartGameC2SPacket, user: Principal): DebugS2CPacket {
         val id = message.botId
-        val game = gameManager.startGame(id, user) ?: throw IllegalArgumentException("Bot not found for id $id")
+        val game = gameManager.startGame(id, user) ?: return DebugS2CPacket("Bot not found for id $id")
 
-        return DebugS2CPacket("Bot [${game.bot.name}:${game.bot.id}] started! Initializing game...")
+        return DebugS2CPacket("Bot [${game.bot.name}:${game.bot.id}] started successfully!")
     }
 
     @MessageMapping("/move")
     @SendToUser("/private/receiver/debug")
     fun move(message: MoveC2SPacket, user: Principal): DebugS2CPacket {
-        val game = gameManager.getGame(user) ?: throw IllegalArgumentException("Game not found for user ${user.name}")
-        game.handleUserMove(message)
-        return DebugS2CPacket("Move registered! Please wait for the bot to respond!")
+        val game = gameManager.getGame(user) ?: return DebugS2CPacket("No game found for user ${user.name}")
+        val accepted = game.handleUserMove(message)
+
+        return DebugS2CPacket("Move [${message.fromX}:${message.fromY} -> ${message.toX}:${message.toY}] ${if (accepted) "accepted" else "rejected"}!")
     }
 }

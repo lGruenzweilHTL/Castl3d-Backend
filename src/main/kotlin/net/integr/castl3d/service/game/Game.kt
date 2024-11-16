@@ -9,20 +9,21 @@ import java.security.Principal
 class Game(val bot: Bot, messagingTemplate: SimpMessageSendingOperations, user: Principal) {
     private var board = ChessBoard(messagingTemplate, user)
 
-    fun handleUserMove(pack: MoveC2SPacket) {
-        if (board.currentMover == board.botColor) return
+    fun handleUserMove(pack: MoveC2SPacket): Boolean {
+        if (board.currentMover == board.botColor) return false
 
         board.hasMovedOnce = false
-        board.move(pack.fromX, pack.fromY, pack.toX, pack.toY)
+        val retVal = board.move(pack.fromX, pack.fromY, pack.toX, pack.toY)
 
         val winner = board.getWinner()
 
         if (winner != Constants.Color.NO_COLOR) {
             board.announceWinner(winner)
-            return
+            return retVal
         }
 
         handleBotMove()
+        return retVal
     }
 
     private fun handleBotMove() {
