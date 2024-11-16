@@ -1,3 +1,5 @@
+@file:Suppress("MemberVisibilityCanBePrivate", "unused")
+
 package net.integr.castl3d.service.game
 
 import net.integr.castl3d.Constants
@@ -7,6 +9,10 @@ import net.integr.castl3d.socket.packet.s2c.SetBoardS2CPacket
 import org.springframework.messaging.simp.SimpMessageSendingOperations
 import java.security.Principal
 
+/**
+ * A class representing a chess board.
+ * @constructor Initializes the board with the starting positions of the pieces.
+ */
 class ChessBoard {
     private var board = Array(8) { Array(8) { ChessFieldPieceData(0, 0, 0, false) } }
 
@@ -58,6 +64,13 @@ class ChessBoard {
         set(7, 7, Constants.Piece.ROOK, userColor, 0, false)
     }
 
+    /**
+     * Get the piece at the specified position.
+     * @param x The x coordinate of the piece.
+     * @param y The y coordinate of the piece.
+     * @return The piece at the specified position.
+     * @see ChessFieldPieceData
+     */
     fun get(x: Int, y: Int): ChessFieldPieceData {
         return board[x][y]
     }
@@ -83,6 +96,15 @@ class ChessBoard {
         set(x, y, Constants.Piece.NONE, Constants.Color.NO_COLOR, 0, false)
     }
 
+    /**
+     * Move a piece from one position to another.
+     * @param x The x coordinate of the piece to move.
+     * @param y The y coordinate of the piece to move.
+     * @param newX The x coordinate to move the piece to.
+     * @param newY The y coordinate to move the piece to.
+     * @return True if the move was successful, false otherwise.
+     * @see Move
+     */
     fun move(x: Int, y: Int, newX: Int, newY: Int): Boolean {
         val valid = moveValidator.getValidMoves(x, y).any { it.first == newX && it.second == newY }
         if (!valid) return false
@@ -95,14 +117,32 @@ class ChessBoard {
         return true
     }
 
+    /**
+     * Move a piece from one position to another.
+     * @param move The move to make.
+     * @return True if the move was successful, false otherwise.
+     * @see Move
+     */
     fun move(move: Move): Boolean {
         return move(move.from.x, move.from.y, move.to.x, move.to.y)
     }
 
+    /**
+     * Test for scenarios in a copy of the board without modifying the original.
+     * @param func The function to test for.
+     * @return True if the function returns true, false otherwise.
+     * @see ChessBoard
+     */
     fun testFor(func: ChessBoard.() -> Boolean): Boolean {
         return copy().func()
     }
 
+    /**
+     * Test for a user checkmate in a copy of the board without modifying the original.
+     * @param move The move to make.
+     * @return True if the user is in checkmate, false otherwise.
+     * @see Move
+     */
     fun testForUserCheckmate(move: Move): Boolean {
         return testFor {
             move(move)
@@ -110,6 +150,12 @@ class ChessBoard {
         }
     }
 
+    /**
+     * Test for a bot checkmate in a copy of the board without modifying the original.
+     * @param move The move to make.
+     * @return True if the bot is in checkmate, false otherwise.
+     * @see Move
+     */
     fun testForBotCheckmate(move: Move): Boolean {
         return testFor {
             move(move)
@@ -144,10 +190,20 @@ class ChessBoard {
         return moveList
     }
 
+    /**
+     * Get all valid moves for the bot.
+     * @return A list of all valid moves.
+     * @see Move
+     */
     fun getAllValidBotMoves(): List<Move> {
         return getAllValidMoves(userColor)
     }
 
+    /**
+     * Get all valid moves for the user.
+     * @return A list of all valid moves.
+     * @see Move
+     */
     fun getAllValidUserMoves(): List<Move> {
         return getAllValidMoves(botColor)
     }
@@ -164,10 +220,20 @@ class ChessBoard {
         return Coordinate(-1, -1)
     }
 
+    /**
+     * Get the position of the bot's king.
+     * @return The position of the bot's king.
+     * @see Coordinate
+     */
     fun getBotKingPosition(): Coordinate {
         return getKingPosition(userColor)
     }
 
+    /**
+     * Get the position of the user's king.
+     * @return The position of the user's king.
+     * @see Coordinate
+     */
     fun getUserKingPosition(): Coordinate {
         return getKingPosition(botColor)
     }
@@ -189,10 +255,18 @@ class ChessBoard {
         return false
     }
 
+    /**
+     * Check if the bot is in check.
+     * @return True if the bot is in check, false otherwise.
+     */
     fun isBotInCheck(): Boolean {
         return isInCheck(userColor)
     }
 
+    /**
+     * Check if the user is in check.
+     * @return True if the user is in check, false otherwise.
+     */
     fun isUserInCheck(): Boolean {
         return isInCheck(botColor)
     }
@@ -205,10 +279,18 @@ class ChessBoard {
         return validMoves.isEmpty()
     }
 
+    /**
+     * Check if the bot is in checkmate.
+     * @return True if the bot is in checkmate, false otherwise.
+     */
     fun isBotCheckmate(): Boolean {
         return isCheckmate(userColor)
     }
 
+    /**
+     * Check if the user is in checkmate.
+     * @return True if the user is in checkmate, false otherwise.
+     */
     fun isUserCheckmate(): Boolean {
         return isCheckmate(botColor)
     }
@@ -220,14 +302,27 @@ class ChessBoard {
         return validMoves.isEmpty()
     }
 
+    /**
+     * Check if the bot is in stalemate.
+     * @return True if the bot is in stalemate, false otherwise.
+     */
     fun isBotStalemate(): Boolean {
         return isStalemate(userColor)
     }
 
+    /**
+     * Check if the user is in stalemate.
+     * @return True if the user is in stalemate, false otherwise.
+     */
     fun isUserStalemate(): Boolean {
         return isStalemate(botColor)
     }
 
+    /**
+     * Get the winner of the game.
+     * @return The color of the winner.
+     * @see Constants.Color
+     */
     fun getWinner(): Int {
         if (isCheckmate(Constants.Color.WHITE)) return Constants.Color.BLACK
         if (isCheckmate(Constants.Color.BLACK)) return Constants.Color.WHITE
@@ -244,10 +339,19 @@ class ChessBoard {
         send(SetBoardS2CPacket(x, y, piece, color, moveCount, hasJustMoved))
     }
 
+    /**
+     * Send a debug message to the user.
+     * @param message The message to send.
+     */
     fun debug(message: String) {
         send(DebugS2CPacket(message))
     }
 
+    /**
+     * Send a message to the user announcing the winner.
+     * @param winner The color of the winner.
+     * @see Constants.Color
+     */
     fun announceWinner(winner: Int) {
         send(DebugS2CPacket("Game over! Winner: $winner"))
         send(GameEndS2CPacket(winner))
