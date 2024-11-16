@@ -11,11 +11,9 @@ import java.security.Principal
 class GameManager @Autowired constructor(private val botManager: BotManager, private val messagingTemplate: SimpMessageSendingOperations) {
     val games = mutableMapOf<String, Game>()
 
-    fun startGame(id: String, user: Principal): Game {
-        val bot = botManager.bootInstance(id, user)
-        val game = Game(bot)
-        game.messagingTemplate = messagingTemplate
-        game.user = user
+    fun startGame(id: String, user: Principal): Game? {
+        val bot = botManager.bootInstance(id, user) ?: return null
+        val game = Game(bot, messagingTemplate, user)
 
         games[user.name] = game
         return game

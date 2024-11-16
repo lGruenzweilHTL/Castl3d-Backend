@@ -13,16 +13,16 @@ import java.security.Principal
 @Controller
 class SocketController @Autowired constructor(val gameManager: GameManager) {
     @MessageMapping("/start_game")
-    @SendToUser("/private/bot_receiver")
+    @SendToUser("/private/receiver/debug")
     fun startGame(message: StartGameC2SPacket, user: Principal): DebugS2CPacket {
         val id = message.botId
-        val game = gameManager.startGame(id, user)
+        val game = gameManager.startGame(id, user) ?: throw IllegalArgumentException("Bot not found for id $id")
 
         return DebugS2CPacket("Bot [${game.bot.name}:${game.bot.id}] started! Initializing game...")
     }
 
     @MessageMapping("/move")
-    @SendToUser("/private/bot_receiver")
+    @SendToUser("/private/receiver/debug")
     fun move(message: MoveC2SPacket, user: Principal): DebugS2CPacket {
         val game = gameManager.getGame(user) ?: throw IllegalArgumentException("Game not found for user ${user.name}")
         game.handleUserMove(message)

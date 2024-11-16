@@ -28,8 +28,8 @@ class BotManager {
         }
     }
 
-    fun bootInstance(botId: String, user: Principal): Bot {
-        val botConstructor = botCache[botId] ?: throw IllegalArgumentException("Bot with id $botId not found")
+    fun bootInstance(botId: String, user: Principal): Bot? {
+        val botConstructor = botCache[botId] ?: return null
         val bootedBot = botConstructor.newInstance() as Bot
         return bootedBot
     }

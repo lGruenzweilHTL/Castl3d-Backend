@@ -12,30 +12,34 @@ class MoveValidator(private val boardContext: ChessBoard) {
         }
 
         return when (data.piece) {
-            Constants.Piece.PAWN -> getValidMovesPawn(x, y)
-            Constants.Piece.ROOK -> getValidMovesRook(x, y)
-            Constants.Piece.KNIGHT -> getValidMovesKnight(x, y)
-            Constants.Piece.BISHOP -> getValidMovesBishop(x, y)
-            Constants.Piece.QUEEN -> getValidMovesQueen(x, y)
-            Constants.Piece.KING -> getValidMovesKing(x, y)
+            Constants.Piece.PAWN -> getValidMovesPawn(x, y).filter { !willHitFriendly(x, y, it.first, it.second) }
+            Constants.Piece.ROOK -> getValidMovesRook(x, y).filter { !willHitFriendly(x, y, it.first, it.second) }
+            Constants.Piece.KNIGHT -> getValidMovesKnight(x, y).filter { !willHitFriendly(x, y, it.first, it.second) }
+            Constants.Piece.BISHOP -> getValidMovesBishop(x, y).filter { !willHitFriendly(x, y, it.first, it.second) }
+            Constants.Piece.QUEEN -> getValidMovesQueen(x, y).filter { !willHitFriendly(x, y, it.first, it.second) }
+            Constants.Piece.KING -> getValidMovesKing(x, y).filter { !willHitFriendly(x, y, it.first, it.second) }
             else -> listOf()
         }
+    }
+
+    private fun willHitFriendly(x: Int, y: Int, i: Int, f: Int): Boolean {
+        return boardContext.get(x, y).color == boardContext.get(i, f).color
     }
 
     private fun getValidMovesPawn(x: Int, y: Int): List<Pair<Int, Int>> {
         val moves: MutableList<Pair<Int, Int>> = mutableListOf()
 
-        if (y == 7) {
+        if (y == 6) {
             if (boardContext.get(x, y-1).piece == Constants.Piece.NONE) moves += x to y-1
             if (boardContext.get(x, y-2).piece == Constants.Piece.NONE) moves += x to y-2
-        } else {
+        } else if (y > 0){
             if (boardContext.get(x, y-1).piece == Constants.Piece.NONE) moves += x to y-1
         }
 
-        if (x > 0 && boardContext.get(x-1, y-1).piece == Constants.Piece.NONE) moves += x-1 to y-1
-        if (x < 7 && boardContext.get(x+1, y-1).piece == Constants.Piece.NONE) moves += x+1 to y-1
+        if (x > 0 && y > 0 && boardContext.get(x-1, y-1).piece != Constants.Piece.NONE) moves += x-1 to y-1
+        if (x < 7  && y > 0 && boardContext.get(x+1, y-1).piece != Constants.Piece.NONE) moves += x+1 to y-1
 
-        if (y == 2) {
+        if (y == 1) {
             if (x > 0 && boardContext.get(x-1, y).piece == Constants.Piece.PAWN && boardContext.get(x-1, y+1).piece == Constants.Piece.NONE && boardContext.get(x-1, y).moveCount == 1 && boardContext.get(x-1, y).hasJustMoved) moves += x-1 to y-1
             if (x < 7 && boardContext.get(x+1, y).piece == Constants.Piece.PAWN && boardContext.get(x+1, y+1).piece == Constants.Piece.NONE && boardContext.get(x+1, y).moveCount == 1 && boardContext.get(x+1, y).hasJustMoved) moves += x+1 to y-1
         }
@@ -76,51 +80,43 @@ class MoveValidator(private val boardContext: ChessBoard) {
             val i = x + dx
             val j = y + dy
             if (i in 0..7 && j >= 0 && j < 8) {
-                if (coordinateCanBeHit(i, j, boardContext.get(x, y).color)) continue
                 moves += i to j
             }
         }
 
         if (boardContext.get(x, y).moveCount == 0) {
-            if (!coordinateCanBeHit(x, y, boardContext.get(x, y).color)) {
-                // Castle
-                val leftRook = boardContext.get(0, y)
-                val rightRook = boardContext.get(7, y)
+            // Castle
+            val leftRook = boardContext.get(0, y)
+            val rightRook = boardContext.get(7, y)
 
-                if (leftRook.piece == Constants.Piece.ROOK && leftRook.color == boardContext.get(x, y).color && leftRook.moveCount == 0) {
-                    var canCastle = true
-                    for (i in (1..<x)) {
-                        if (boardContext.get(i, y).piece != Constants.Piece.NONE) {
-                            canCastle = false
-                            break
-                        } else if (coordinateCanBeHit(i, y, boardContext.get(x, y).color)) {
-                            canCastle = false
-                            break
-                        }
-                    }
-
-                    if (canCastle) {
-                        moves += x-2 to y
+            if (leftRook.piece == Constants.Piece.ROOK && leftRook.color == boardContext.get(x, y).color && leftRook.moveCount == 0) {
+                var canCastle = true
+                for (i in (1..<x)) {
+                    if (boardContext.get(i, y).piece != Constants.Piece.NONE) {
+                        canCastle = false
+                        break
                     }
                 }
 
-                if (rightRook.piece == Constants.Piece.ROOK && rightRook.color == boardContext.get(x, y).color && rightRook.moveCount == 0) {
-                    var canCastle = true
-                    for (i in (x+1..<7)) {
-                        if (boardContext.get(i, y).piece != Constants.Piece.NONE) {
-                            canCastle = false
-                            break
-                        } else if (coordinateCanBeHit(i, y, boardContext.get(x, y).color)) {
-                            canCastle = false
-                            break
-                        }
-                    }
-
-                    if (canCastle) {
-                        moves += x+2 to y
-                    }
+                if (canCastle) {
+                    moves += x-2 to y
                 }
             }
+
+            if (rightRook.piece == Constants.Piece.ROOK && rightRook.color == boardContext.get(x, y).color && rightRook.moveCount == 0) {
+                var canCastle = true
+                for (i in (x+1..<7)) {
+                    if (boardContext.get(i, y).piece != Constants.Piece.NONE) {
+                        canCastle = false
+                        break
+                    }
+                }
+
+                if (canCastle) {
+                    moves += x+2 to y
+                }
+            }
+
         }
 
         return moves
@@ -182,60 +178,5 @@ class MoveValidator(private val boardContext: ChessBoard) {
         }
 
         return moves
-    }
-
-    private fun coordinateCanBeHit(x: Int, y: Int, color: Int): Boolean {
-        val directions: List<Pair<Int, Int>> = listOf(
-            -1 to -1, 1 to -1, -1 to 1, 1 to 1,
-            -1 to 0, 1 to 0, 0 to -1, 0 to 1
-        )
-
-        for ((dx, dy) in directions) {
-            var i = x + dx
-            var j = y + dy
-            while (i in 0..7 && j >= 0 && j < 8) {
-                val data = boardContext.get(i, j)
-                if (data.piece != Constants.Piece.NONE) {
-                    if (data.color == color) break
-                    return true
-                }
-
-                i += dx
-                j += dy
-            }
-        }
-
-        val knightMoves: List<Pair<Int, Int>> = listOf(
-            -2 to -1, -2 to 1, 2 to -1, 2 to 1,
-            -1 to -2, -1 to 2, 1 to -2, 1 to 2
-        )
-
-        for ((dx, dy) in knightMoves) {
-            val i = x + dx
-            val j = y + dy
-            if (i in 0..7 && j >= 0 && j < 8) {
-                val data = boardContext.get(i, j)
-                if (data.piece == Constants.Piece.KNIGHT && data.color != color) {
-                    return true
-                }
-            }
-        }
-
-        val pawnMoves: List<Pair<Int, Int>> = listOf(
-            -1 to -1, 1 to -1, -1 to 1, 1 to 1
-        )
-
-        for ((dx, dy) in pawnMoves) {
-            val i = x + dx
-            val j = y + dy
-            if (i in 0..7 && j >= 0 && j < 8) {
-                val data = boardContext.get(i, j)
-                if (data.piece == Constants.Piece.PAWN && data.color != color) {
-                    return true
-                }
-            }
-        }
-
-        return false
     }
 }

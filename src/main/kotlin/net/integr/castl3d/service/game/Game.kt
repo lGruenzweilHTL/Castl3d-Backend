@@ -6,23 +6,14 @@ import net.integr.castl3d.socket.packet.c2s.MoveC2SPacket
 import org.springframework.messaging.simp.SimpMessageSendingOperations
 import java.security.Principal
 
-class Game(val bot: Bot) {
-    var messagingTemplate: SimpMessageSendingOperations? = null
-    var user: Principal? = null
-
-    private var botIsMoving = false
-
-    private var board = ChessBoard()
-
-    init {
-        board.messagingTemplate = messagingTemplate
-        board.user = user
-    }
+class Game(val bot: Bot, messagingTemplate: SimpMessageSendingOperations, user: Principal) {
+    private var board = ChessBoard(messagingTemplate, user)
 
     fun handleUserMove(pack: MoveC2SPacket) {
-        if (botIsMoving) return
+        if (board.currentMover == board.botColor) return
+
+        board.hasMovedOnce = false
         board.move(pack.fromX, pack.fromY, pack.toX, pack.toY)
-        botIsMoving = true
 
         val winner = board.getWinner()
 
@@ -35,9 +26,9 @@ class Game(val bot: Bot) {
     }
 
     private fun handleBotMove() {
-        if (!botIsMoving) return
+        if (board.currentMover != board.botColor) return
+        board.hasMovedOnce = false
         bot.move(board)
-        botIsMoving = false
 
         val winner = board.getWinner()
 

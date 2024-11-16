@@ -3,29 +3,31 @@
 package net.integr.castl3d.service.game
 
 import net.integr.castl3d.Constants
+import net.integr.castl3d.service.game.management.HasAlreadyMovedException
 import net.integr.castl3d.socket.packet.s2c.DebugS2CPacket
 import net.integr.castl3d.socket.packet.s2c.GameEndS2CPacket
 import net.integr.castl3d.socket.packet.s2c.SetBoardS2CPacket
 import org.springframework.messaging.simp.SimpMessageSendingOperations
 import java.security.Principal
+import kotlin.jvm.Throws
 
 /**
  * A class representing a chess board.
  * @constructor Initializes the board with the starting positions of the pieces.
  */
-class ChessBoard {
-    private var board = Array(8) { Array(8) { ChessFieldPieceData(0, 0, 0, false) } }
+class ChessBoard(val messagingTemplate: SimpMessageSendingOperations?, val user: Principal?) {
+    var board = Array(8) { Array(8) { ChessFieldPieceData(Constants.Piece.NONE, Constants.Color.NO_COLOR, 0, false) } }
 
     private var moveValidator = MoveValidator(this)
 
-    var messagingTemplate: SimpMessageSendingOperations? = null
-    var user: Principal? = null
+    val userColor = Constants.Color.WHITE
+    val botColor = Constants.Color.BLACK
 
-    private val userColor = Constants.Color.WHITE
-    private val botColor = Constants.Color.BLACK
+    var currentMover = userColor
+    var hasMovedOnce = false
 
     init {
-        // White
+        // Bot
         set(0, 0, Constants.Piece.ROOK, botColor, 0, false)
         set(1, 0, Constants.Piece.KNIGHT, botColor, 0, false)
         set(2, 0, Constants.Piece.BISHOP, botColor, 0, false)
@@ -35,16 +37,16 @@ class ChessBoard {
         set(6, 0, Constants.Piece.KNIGHT, botColor, 0, false)
         set(7, 0, Constants.Piece.ROOK, botColor, 0, false)
 
-        set(0, 1, Constants.Piece.PAWN, Constants.Color.WHITE, 0, false)
-        set(1, 1, Constants.Piece.PAWN, Constants.Color.WHITE, 0, false)
-        set(2, 1, Constants.Piece.PAWN, Constants.Color.WHITE, 0, false)
-        set(3, 1, Constants.Piece.PAWN, Constants.Color.WHITE, 0, false)
-        set(4, 1, Constants.Piece.PAWN, Constants.Color.WHITE, 0, false)
-        set(5, 1, Constants.Piece.PAWN, Constants.Color.WHITE, 0, false)
-        set(6, 1, Constants.Piece.PAWN, Constants.Color.WHITE, 0, false)
-        set(7, 1, Constants.Piece.PAWN, Constants.Color.WHITE, 0, false)
+        set(0, 1, Constants.Piece.PAWN, botColor, 0, false)
+        set(1, 1, Constants.Piece.PAWN, botColor, 0, false)
+        set(2, 1, Constants.Piece.PAWN, botColor, 0, false)
+        set(3, 1, Constants.Piece.PAWN, botColor, 0, false)
+        set(4, 1, Constants.Piece.PAWN, botColor, 0, false)
+        set(5, 1, Constants.Piece.PAWN, botColor, 0, false)
+        set(6, 1, Constants.Piece.PAWN, botColor, 0, false)
+        set(7, 1, Constants.Piece.PAWN, botColor, 0, false)
 
-        // Black
+        // User
         set(0, 6, Constants.Piece.PAWN, userColor, 0, false)
         set(1, 6, Constants.Piece.PAWN, userColor, 0, false)
         set(2, 6, Constants.Piece.PAWN, userColor, 0, false)
@@ -104,16 +106,22 @@ class ChessBoard {
      * @param newY The y coordinate to move the piece to.
      * @return True if the move was successful, false otherwise.
      * @see Move
+     * @throws HasAlreadyMovedException If the bot has already moved.
      */
+    @Throws(HasAlreadyMovedException::class)
     fun move(x: Int, y: Int, newX: Int, newY: Int): Boolean {
-        val valid = moveValidator.getValidMoves(x, y).any { it.first == newX && it.second == newY }
+        if (currentMover != get(x, y).color) return false
+        if (hasMovedOnce) throw HasAlreadyMovedException()
+        val moves = moveValidator.getValidMoves(x, y)
+        val valid = moves.any { it.first == newX && it.second == newY }
         if (!valid) return false
 
         val oldData = get(x, y)
         wipeJustMoved(oldData.color)
         set(newX, newY, oldData.piece, oldData.color, oldData.moveCount + 1, true)
         clear(x, y)
-
+        currentMover = if (currentMover == botColor) userColor else botColor
+        hasMovedOnce = true
         return true
     }
 
@@ -122,7 +130,9 @@ class ChessBoard {
      * @param move The move to make.
      * @return True if the move was successful, false otherwise.
      * @see Move
+     * @throws HasAlreadyMovedException If the bot has already moved.
      */
+    @Throws(HasAlreadyMovedException::class)
     fun move(move: Move): Boolean {
         return move(move.from.x, move.from.y, move.to.x, move.to.y)
     }
@@ -164,7 +174,7 @@ class ChessBoard {
     }
 
     private fun copy(): ChessBoard {
-        val newBoard = ChessBoard()
+        val newBoard = ChessBoard(null, null)
         for (i in 0..7) {
             for (j in 0..7) {
                 newBoard.set(i, j, get(i, j).piece, get(i, j).color, get(i, j).moveCount, get(i, j).hasJustMoved)
@@ -196,7 +206,7 @@ class ChessBoard {
      * @see Move
      */
     fun getAllValidBotMoves(): List<Move> {
-        return getAllValidMoves(userColor)
+        return getAllValidMoves(botColor)
     }
 
     /**
@@ -205,7 +215,7 @@ class ChessBoard {
      * @see Move
      */
     fun getAllValidUserMoves(): List<Move> {
-        return getAllValidMoves(botColor)
+        return getAllValidMoves(userColor)
     }
 
     private fun getKingPosition(color: Int): Coordinate {
@@ -226,7 +236,7 @@ class ChessBoard {
      * @see Coordinate
      */
     fun getBotKingPosition(): Coordinate {
-        return getKingPosition(userColor)
+        return getKingPosition(botColor)
     }
 
     /**
@@ -235,7 +245,7 @@ class ChessBoard {
      * @see Coordinate
      */
     fun getUserKingPosition(): Coordinate {
-        return getKingPosition(botColor)
+        return getKingPosition(userColor)
     }
 
     private fun isInCheck(color: Int): Boolean {
@@ -260,7 +270,7 @@ class ChessBoard {
      * @return True if the bot is in check, false otherwise.
      */
     fun isBotInCheck(): Boolean {
-        return isInCheck(userColor)
+        return isInCheck(botColor)
     }
 
     /**
@@ -268,7 +278,7 @@ class ChessBoard {
      * @return True if the user is in check, false otherwise.
      */
     fun isUserInCheck(): Boolean {
-        return isInCheck(botColor)
+        return isInCheck(userColor)
     }
 
     private fun isCheckmate(color: Int): Boolean {
@@ -284,7 +294,7 @@ class ChessBoard {
      * @return True if the bot is in checkmate, false otherwise.
      */
     fun isBotCheckmate(): Boolean {
-        return isCheckmate(userColor)
+        return isCheckmate(botColor)
     }
 
     /**
@@ -292,7 +302,7 @@ class ChessBoard {
      * @return True if the user is in checkmate, false otherwise.
      */
     fun isUserCheckmate(): Boolean {
-        return isCheckmate(botColor)
+        return isCheckmate(userColor)
     }
 
     private fun isStalemate(color: Int): Boolean {
@@ -307,7 +317,7 @@ class ChessBoard {
      * @return True if the bot is in stalemate, false otherwise.
      */
     fun isBotStalemate(): Boolean {
-        return isStalemate(userColor)
+        return isStalemate(botColor)
     }
 
     /**
@@ -315,7 +325,7 @@ class ChessBoard {
      * @return True if the user is in stalemate, false otherwise.
      */
     fun isUserStalemate(): Boolean {
-        return isStalemate(botColor)
+        return isStalemate(userColor)
     }
 
     /**
@@ -324,19 +334,43 @@ class ChessBoard {
      * @see Constants.Color
      */
     fun getWinner(): Int {
+        if (!kingExists(Constants.Color.WHITE)) return Constants.Color.BLACK
+        if (!kingExists(Constants.Color.BLACK)) return Constants.Color.WHITE
         if (isCheckmate(Constants.Color.WHITE)) return Constants.Color.BLACK
         if (isCheckmate(Constants.Color.BLACK)) return Constants.Color.WHITE
-        if (isStalemate(Constants.Color.WHITE) || isStalemate(Constants.Color.BLACK)) return Constants.Color.NO_COLOR
+        if (isStalemate(Constants.Color.WHITE) || isStalemate(Constants.Color.BLACK)) return Constants.Color.ANY_COLOR
 
         return Constants.Color.NO_COLOR
     }
 
-    private fun send(message: Any) {
-        messagingTemplate!!.convertAndSendToUser(user!!.name, "/private/bot_receiver", message)
+    private fun kingExists(color: Int): Boolean {
+        val kp = getKingPosition(color)
+        return !(kp.x == -1 && kp.y == -1)
+    }
+
+    /**
+     * Check if the bot's king exists.
+     * @return True if the bot's king exists, false otherwise.
+     */
+    fun botKingExists(): Boolean {
+        return kingExists(botColor)
+    }
+
+    /**
+     * Check if the user's king exists.
+     * @return True if the user's king exists, false otherwise.
+     */
+    fun userKingExists(): Boolean {
+        return kingExists(userColor)
+    }
+
+    private fun send(message: Any, dest: String) {
+        if (messagingTemplate == null) throw IllegalStateException("Messaging template not set!")
+        messagingTemplate.convertAndSendToUser(user!!.name, "/private/receiver/$dest", message)
     }
 
     private fun updateBoard(x: Int, y: Int, piece: Int, color: Int, moveCount: Int, hasJustMoved: Boolean) {
-        send(SetBoardS2CPacket(x, y, piece, color, moveCount, hasJustMoved))
+        send(SetBoardS2CPacket(x, y, piece, color, moveCount, hasJustMoved), "set_board")
     }
 
     /**
@@ -344,7 +378,7 @@ class ChessBoard {
      * @param message The message to send.
      */
     fun debug(message: String) {
-        send(DebugS2CPacket(message))
+        send(DebugS2CPacket(message), "debug")
     }
 
     /**
@@ -353,8 +387,8 @@ class ChessBoard {
      * @see Constants.Color
      */
     fun announceWinner(winner: Int) {
-        send(DebugS2CPacket("Game over! Winner: $winner"))
-        send(GameEndS2CPacket(winner))
+        debug("Game over! Winner: ${if (winner == Constants.Color.WHITE) "White" else "Black"}")
+        send(GameEndS2CPacket(winner), "game_end")
     }
 }
 

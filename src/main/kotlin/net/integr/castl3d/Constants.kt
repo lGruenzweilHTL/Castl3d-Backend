@@ -18,6 +18,7 @@ class Constants {
             const val WHITE = 10
             const val BLACK = 11
             const val NO_COLOR = 12
+            const val ANY_COLOR = 13
         }
     }
 }
