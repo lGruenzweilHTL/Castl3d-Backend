@@ -1,5 +1,6 @@
 package net.integr.castl3d.service.bot
 
+import net.integr.castl3d.service.game.ChessBoard
 import net.integr.castl3d.socket.packet.s2c.DebugS2CPacket
 import net.integr.castl3d.socket.packet.s2c.SetBoardS2CPacket
 import org.springframework.messaging.simp.SimpMessageSendingOperations
@@ -13,7 +14,7 @@ open class Bot(val id: String, val name: String) {
 
     }
 
-    open fun move() {
+    open fun move(board: ChessBoard) {
 
     }
 
