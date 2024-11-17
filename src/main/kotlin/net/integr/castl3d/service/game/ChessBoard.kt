@@ -400,7 +400,6 @@ class ChessBoard(val messagingTemplate: SimpMessageSendingOperations?, val user:
      * @see Constants.Color
      */
     fun announceWinner(winner: Int) {
-        debug("Game over! Winner: ${if (winner == Constants.Color.WHITE) "White" else "Black"}")
         send(GameEndS2CPacket(winner), "game_end")
     }
 }
