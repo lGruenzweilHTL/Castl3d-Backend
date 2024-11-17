@@ -66,3 +66,9 @@ To make a move, call the `board.move(move)` function with the desired move. You 
 Bots are detected via reflection and registered automatically when the application starts.
 Feel free to implement your own bot logic and strategies (And maybe make a PR to share it with the community :) ).
 The board api is well documented and easy to use, so you can easily implement your bot.
+
+## Todo
+- [ ] Implement a more advanced bot with a better strategy.
+- [ ] Add promotion support.
+- [ ] Fix castling and en passant moves.
+- [ ] Add support for selecting color.
