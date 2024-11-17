@@ -16,7 +16,7 @@ package net.integr.castl3d.service.bot
 import net.integr.castl3d.service.game.ChessBoard
 
 /**
- * Base class for all bots.
+ * Base interface for all bots.
  * @constructor creates a new bot with the given id and name
  */
 interface Bot {
