@@ -14,7 +14,9 @@
 package net.integr.castl3d.service.bot.management
 
 import net.integr.castl3d.service.bot.Bot
+import net.integr.castl3d.service.game.management.Castl3dBot
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider
+import org.springframework.core.type.filter.AnnotationTypeFilter
 import org.springframework.core.type.filter.AssignableTypeFilter
 import org.springframework.stereotype.Service
 import java.lang.reflect.Constructor
@@ -31,6 +33,7 @@ class BotManager {
     private final fun loadBotsToCache() {
         val scanner = ClassPathScanningCandidateComponentProvider(false)
         scanner.addIncludeFilter(AssignableTypeFilter(Bot::class.java))
+        scanner.addIncludeFilter(AnnotationTypeFilter(Castl3dBot::class.java))
 
         val botClasses = scanner.findCandidateComponents("net.integr.castl3d.service.bot.impl")
             .map { Class.forName(it.beanClassName) }
