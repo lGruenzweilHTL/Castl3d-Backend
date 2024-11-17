@@ -24,6 +24,5 @@ interface Bot {
      * Make a move on the board.
      * @param board the board to make a move on
      */
-    fun move(board: ChessBoard) {
-    }
+    fun move(board: ChessBoard)
 }

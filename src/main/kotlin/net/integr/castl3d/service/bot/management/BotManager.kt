@@ -47,10 +47,11 @@ class BotManager {
         }
     }
 
-    fun bootInstance(botId: String, user: Principal): Bot? {
+    fun bootInstance(botId: String, user: Principal): Triple<Bot, String, String>? {
         val botCacheEntry = botCache[botId] ?: return null
+        val botName = botCacheEntry.botName
         val bootedBot = botCacheEntry.constructor.newInstance() as Bot
-        return bootedBot
+        return Triple(bootedBot, botId, botName)
     }
 
     fun getBotsForList(): ListBotsResponse {

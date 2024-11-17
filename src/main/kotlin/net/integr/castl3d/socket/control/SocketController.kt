@@ -29,9 +29,9 @@ class SocketController @Autowired constructor(val gameManager: GameManager) {
     @SendToUser("/private/receiver/debug")
     fun startGame(message: StartGameC2SPacket, user: Principal): DebugS2CPacket {
         val id = message.botId
-        val game = gameManager.startGame(id, user) ?: return DebugS2CPacket("Bot not found for id $id")
+        val (_, botId, botName) = gameManager.startGame(id, user) ?: return DebugS2CPacket("Bot not found for id $id")
 
-        return DebugS2CPacket("Bot [${game.bot.name}:${game.bot.id}] started successfully!")
+        return DebugS2CPacket("Bot [${botName}:${botId}] started successfully!")
     }
 
     @MessageMapping("/move")
