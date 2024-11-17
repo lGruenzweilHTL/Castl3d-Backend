@@ -16,10 +16,12 @@ package net.integr.castl3d.rest.control
 import net.integr.castl3d.rest.response.ListBotsResponse
 import net.integr.castl3d.service.bot.management.BotManager
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
+@CrossOrigin
 class RestController @Autowired constructor(val botManager: BotManager) {
     @GetMapping("/bots")
     fun getBots(): ListBotsResponse {
