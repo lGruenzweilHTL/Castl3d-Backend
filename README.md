@@ -31,6 +31,9 @@ Castl3d-Backend is a Spring Boot application that serves as the backend for the 
     ```
     The application will start on port 8080 by default.
 
+4. Start the frontend application to play the game.
+   The frontend application is available at [Castl3d-Frontend](https://github.com/Integr-0/Castl3d-Frontend).
+   
 ## Making a bot
 
 ````kotlin
