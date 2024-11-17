@@ -11,19 +11,7 @@
  * limitations under the License.
  */
 
-package net.integr.castl3d.service.bot
+package net.integr.castl3d.rest.response
 
-import net.integr.castl3d.service.game.ChessBoard
-
-/**
- * Base class for all bots.
- * @constructor creates a new bot with the given id and name
- */
-interface Bot {
-    /**
-     * Make a move on the board.
-     * @param board the board to make a move on
-     */
-    fun move(board: ChessBoard) {
-    }
-}
+data class ListBotsResponse(val bots: List<BotResponse>)
+data class BotResponse(val id: String, val name: String)

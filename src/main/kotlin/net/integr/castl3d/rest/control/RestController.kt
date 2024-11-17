@@ -11,19 +11,19 @@
  * limitations under the License.
  */
 
-package net.integr.castl3d.service.bot
+package net.integr.castl3d.rest.control
 
-import net.integr.castl3d.service.game.ChessBoard
+import net.integr.castl3d.rest.response.ListBotsResponse
+import net.integr.castl3d.service.bot.management.BotManager
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.RestController
 
-/**
- * Base class for all bots.
- * @constructor creates a new bot with the given id and name
- */
-interface Bot {
-    /**
-     * Make a move on the board.
-     * @param board the board to make a move on
-     */
-    fun move(board: ChessBoard) {
+@RestController
+class RestController @Autowired constructor(val botManager: BotManager) {
+    @GetMapping("/bots")
+    fun getBots(): ListBotsResponse {
+        val bots = botManager.getBotsForList()
+        return bots
     }
 }

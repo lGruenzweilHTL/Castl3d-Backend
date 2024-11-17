@@ -13,6 +13,8 @@
 
 package net.integr.castl3d.service.bot.management
 
+import net.integr.castl3d.rest.response.BotResponse
+import net.integr.castl3d.rest.response.ListBotsResponse
 import net.integr.castl3d.service.bot.Bot
 import net.integr.castl3d.service.game.management.Castl3dBot
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider
@@ -24,7 +26,7 @@ import java.security.Principal
 
 @Service
 class BotManager {
-    private val botCache = mutableMapOf<String, Constructor<*>>()
+    private val botCache = mutableMapOf<String, BotCacheEntry>()
 
     init {
         loadBotsToCache()
@@ -39,14 +41,21 @@ class BotManager {
             .map { Class.forName(it.beanClassName) }
 
         botClasses.forEach {
-            val bot = it.constructors.first().newInstance() as Bot
-            botCache[bot.id] = it.constructors.first()
+            val anno = it.getAnnotation(Castl3dBot::class.java)
+            val entry = BotCacheEntry(anno.name, it.constructors.first())
+            botCache[anno.id] = entry
         }
     }
 
     fun bootInstance(botId: String, user: Principal): Bot? {
-        val botConstructor = botCache[botId] ?: return null
-        val bootedBot = botConstructor.newInstance() as Bot
+        val botCacheEntry = botCache[botId] ?: return null
+        val bootedBot = botCacheEntry.constructor.newInstance() as Bot
         return bootedBot
     }
+
+    fun getBotsForList(): ListBotsResponse {
+        return ListBotsResponse(botCache.map { BotResponse(it.key, it.value.botName) })
+    }
 }
+
+data class BotCacheEntry(val botName: String, val constructor: Constructor<*>)

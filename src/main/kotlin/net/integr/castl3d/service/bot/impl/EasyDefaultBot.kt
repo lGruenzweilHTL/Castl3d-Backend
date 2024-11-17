@@ -17,8 +17,8 @@ import net.integr.castl3d.service.bot.Bot
 import net.integr.castl3d.service.game.ChessBoard
 import net.integr.castl3d.service.game.management.Castl3dBot
 
-@Castl3dBot
-class EasyDefaultBot : Bot("easy_default", "Easy") {
+@Castl3dBot("easy_default", "Easy")
+class EasyDefaultBot : Bot {
     override fun move(board: ChessBoard) {
         val moves = board.getAllValidBotMoves()
 
