@@ -32,6 +32,17 @@ class Constants {
             const val BLACK = 11
             const val NO_COLOR = 12
             const val ANY_COLOR = 13
+
+            /**
+             * Returns the opposite color of the given color.
+             */
+            fun Int.oppositeColor(): Int {
+                return when (this) {
+                    WHITE -> BLACK
+                    BLACK -> WHITE
+                    else -> NO_COLOR
+                }
+            }
         }
     }
 }

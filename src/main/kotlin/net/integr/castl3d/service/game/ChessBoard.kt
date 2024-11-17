@@ -90,6 +90,16 @@ class ChessBoard(val messagingTemplate: SimpMessageSendingOperations?, val user:
         return board[x][y]
     }
 
+    /**
+     * Get the piece at the specified position.
+     * @param pos The position of the piece.
+     * @return The piece at the specified position.
+     * @see ChessFieldPieceData
+     */
+    fun get(pos: Coordinate): ChessFieldPieceData {
+        return get(pos.x, pos.y)
+    }
+
     private fun set(x: Int, y: Int, piece: Int, color: Int, moveCount: Int, hasJustMoved: Boolean) {
         board[x][y].piece = piece
         board[x][y].color = color
