@@ -20,6 +20,8 @@ package net.integr.castl3d.service.game
  * @param from the coordinate of the piece to move
  * @param to the coordinate to move the piece to
  * @param isCapture true if the move is a capture, false otherwise
+ * @param isCastle true if the move is a castle, false otherwise
+ * @param isEnPassant true if the move is an en passant, false otherwise
  * @see Coordinate
  */
 class Move(val from: Coordinate, val to: Coordinate, var isCapture: Boolean = false, val isCastle: Boolean = false, val isEnPassant: Boolean = false) {
