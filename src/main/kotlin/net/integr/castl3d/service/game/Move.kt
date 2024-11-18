@@ -22,11 +22,11 @@ package net.integr.castl3d.service.game
  * @param isCapture true if the move is a capture, false otherwise
  * @see Coordinate
  */
-class Move(val from: Coordinate, val to: Coordinate, val isCapture: Boolean) {
+class Move(val from: Coordinate, val to: Coordinate, var isCapture: Boolean = false, val isCastle: Boolean = false, val isEnPassant: Boolean = false) {
     /**
      * Returns a string representation of the move.
      */
     override fun toString(): String {
-        return "Move(from=$from, to=$to)"
+        return "Move(from=$from, to=$to, isCapture=$isCapture, isCastle=$isCastle, isEnPassant=$isEnPassant)"
     }
 }

@@ -136,8 +136,26 @@ class ChessBoard(val messagingTemplate: SimpMessageSendingOperations?, val user:
         if (currentMover != get(x, y).color) return false
         if (hasMovedOnce) throw HasAlreadyMovedException()
         val moves = moveValidator.getValidMoves(x, y)
-        val valid = moves.any { it.first == newX && it.second == newY }
-        if (!valid) return false
+        val validMove = moves.firstOrNull { it.to.x == newX && it.to.y == newY }
+        if (validMove == null) return false
+
+        if (validMove.isCastle) {
+            val rookX = if (newX == 2) 0 else 7
+            val rookY = if (get(x, y).color == Constants.Color.BLACK) 0 else 7
+            val newRookX = if (newX == 2) 3 else 5
+            set(newX, newY, Constants.Piece.KING, get(x, y).color, get(x, y).moveCount + 1, true)
+            set(newRookX, newY, Constants.Piece.ROOK, get(x, y).color, get(x, y).moveCount + 1, true)
+            clear(x, y)
+            clear(rookX, rookY)
+            currentMover = if (currentMover == botColor) userColor else botColor
+            hasMovedOnce = true
+            return true
+        }
+
+        if (validMove.isEnPassant) {
+            val targetY = if (get(x, y).color == Constants.Color.WHITE) newY + 1 else newY - 1
+            clear(newX, targetY)
+        }
 
         val oldData = get(x, y)
         wipeJustMoved(oldData.color)
@@ -197,7 +215,7 @@ class ChessBoard(val messagingTemplate: SimpMessageSendingOperations?, val user:
     }
 
     private fun copy(): ChessBoard {
-        val newBoard = ChessBoard(null, null)
+        val newBoard = ChessBoard(messagingTemplate, user)
         for (i in 0..7) {
             for (j in 0..7) {
                 newBoard.set(i, j, get(i, j).piece, get(i, j).color, get(i, j).moveCount, get(i, j).hasJustMoved)
@@ -214,8 +232,9 @@ class ChessBoard(val messagingTemplate: SimpMessageSendingOperations?, val user:
                 if (get(i, j).color != color) continue
                 val moves = moveValidator.getValidMoves(i, j)
                 for (move in moves) {
-                    val isCapture = get(move.first, move.second).color != Constants.Color.NO_COLOR
-                    moveList.add(Move(Coordinate(i, j), Coordinate(move.first, move.second), isCapture))
+                    val isCapture = get(move.to.x, move.to.y).color != Constants.Color.NO_COLOR
+                    move.isCapture = isCapture
+                    moveList.add(move)
                 }
             }
         }
@@ -278,7 +297,7 @@ class ChessBoard(val messagingTemplate: SimpMessageSendingOperations?, val user:
             for (j in 0..7) {
                 if (get(i, j).color == opponentColor) {
                     val validMoves = moveValidator.getValidMoves(i, j)
-                    if (validMoves.any { it.first == kingPosition.x && it.second == kingPosition.y }) {
+                    if (validMoves.any { it.to.x == kingPosition.x && it.to.y == kingPosition.y }) {
                         return true
                     }
                 }

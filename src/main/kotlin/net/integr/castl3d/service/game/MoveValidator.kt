@@ -18,19 +18,19 @@ package net.integr.castl3d.service.game
 import net.integr.castl3d.Constants
 
 class MoveValidator(private val boardContext: ChessBoard) {
-    fun getValidMoves(x: Int, y: Int): List<Pair<Int, Int>> {
+    fun getValidMoves(x: Int, y: Int): List<Move> {
         val data = boardContext.get(x, y)
         if (data.piece == Constants.Piece.NONE) {
             return listOf()
         }
 
         return when (data.piece) {
-            Constants.Piece.PAWN -> getValidMovesPawn(x, y).filter { !willHitFriendly(x, y, it.first, it.second) }
-            Constants.Piece.ROOK -> getValidMovesRook(x, y).filter { !willHitFriendly(x, y, it.first, it.second) }
-            Constants.Piece.KNIGHT -> getValidMovesKnight(x, y).filter { !willHitFriendly(x, y, it.first, it.second) }
-            Constants.Piece.BISHOP -> getValidMovesBishop(x, y).filter { !willHitFriendly(x, y, it.first, it.second) }
-            Constants.Piece.QUEEN -> getValidMovesQueen(x, y).filter { !willHitFriendly(x, y, it.first, it.second) }
-            Constants.Piece.KING -> getValidMovesKing(x, y).filter { !willHitFriendly(x, y, it.first, it.second) }
+            Constants.Piece.PAWN -> getValidMovesPawn(x, y).filter { !willHitFriendly(x, y, it.to.x, it.to.y) }
+            Constants.Piece.ROOK -> getValidMovesRook(x, y).filter { !willHitFriendly(x, y, it.to.x, it.to.y) }
+            Constants.Piece.KNIGHT -> getValidMovesKnight(x, y).filter { !willHitFriendly(x, y, it.to.x, it.to.y) }
+            Constants.Piece.BISHOP -> getValidMovesBishop(x, y).filter { !willHitFriendly(x, y, it.to.x, it.to.y) }
+            Constants.Piece.QUEEN -> getValidMovesQueen(x, y).filter { !willHitFriendly(x, y, it.to.x, it.to.y) }
+            Constants.Piece.KING -> getValidMovesKing(x, y).filter { !willHitFriendly(x, y, it.to.x, it.to.y) }
             else -> listOf()
         }
     }
@@ -39,29 +39,46 @@ class MoveValidator(private val boardContext: ChessBoard) {
         return boardContext.get(x, y).color == boardContext.get(i, f).color
     }
 
-    private fun getValidMovesPawn(x: Int, y: Int): List<Pair<Int, Int>> {
-        val moves: MutableList<Pair<Int, Int>> = mutableListOf()
+    private fun getValidMovesPawn(x: Int, y: Int): List<Move> {
+        val moves: MutableList<Move> = mutableListOf()
 
-        if (y == 6) {
-            if (boardContext.get(x, y-1).piece == Constants.Piece.NONE) moves += x to y-1
-            if (boardContext.get(x, y-2).piece == Constants.Piece.NONE) moves += x to y-2
-        } else if (y > 0){
-            if (boardContext.get(x, y-1).piece == Constants.Piece.NONE) moves += x to y-1
-        }
+        if (boardContext.get(x, y).color == Constants.Color.WHITE) {
+            if (y == 6) {
+                if (boardContext.get(x, y-1).piece == Constants.Piece.NONE) moves += Move(Coordinate(x, y), Coordinate(x, y-1))
+                if (boardContext.get(x, y-2).piece == Constants.Piece.NONE) moves += Move(Coordinate(x, y), Coordinate(x, y-2))
+            } else if (y > 0) {
+                if (boardContext.get(x, y-1).piece == Constants.Piece.NONE) moves += Move(Coordinate(x, y), Coordinate(x, y-1))
+            }
 
-        if (x > 0 && y > 0 && boardContext.get(x-1, y-1).piece != Constants.Piece.NONE) moves += x-1 to y-1
-        if (x < 7  && y > 0 && boardContext.get(x+1, y-1).piece != Constants.Piece.NONE) moves += x+1 to y-1
+            if (x > 0 && y > 0 && boardContext.get(x-1, y-1).piece != Constants.Piece.NONE) moves += Move(Coordinate(x, y), Coordinate(x-1, y-1))
+            if (x < 7 && y > 0 && boardContext.get(x+1, y-1).piece != Constants.Piece.NONE) moves += Move(Coordinate(x, y), Coordinate(x+1, y-1))
 
-        if (y == 1) {
-            if (x > 0 && boardContext.get(x-1, y).piece == Constants.Piece.PAWN && boardContext.get(x-1, y+1).piece == Constants.Piece.NONE && boardContext.get(x-1, y).moveCount == 1 && boardContext.get(x-1, y).hasJustMoved) moves += x-1 to y-1
-            if (x < 7 && boardContext.get(x+1, y).piece == Constants.Piece.PAWN && boardContext.get(x+1, y+1).piece == Constants.Piece.NONE && boardContext.get(x+1, y).moveCount == 1 && boardContext.get(x+1, y).hasJustMoved) moves += x+1 to y-1
+            if (y == 1) {
+                if (x > 0 && boardContext.get(x-1, y).piece == Constants.Piece.PAWN && boardContext.get(x-1, y+1).piece == Constants.Piece.NONE && boardContext.get(x-1, y).moveCount == 1 && boardContext.get(x-1, y).hasJustMoved) moves += Move(Coordinate(x, y), Coordinate(x-1, y-1), isEnPassant = true)
+                if (x < 7 && boardContext.get(x+1, y).piece == Constants.Piece.PAWN && boardContext.get(x+1, y+1).piece == Constants.Piece.NONE && boardContext.get(x+1, y).moveCount == 1 && boardContext.get(x+1, y).hasJustMoved) moves += Move(Coordinate(x, y), Coordinate(x+1, y-1), isEnPassant = true)
+            }
+        } else {
+            if (y == 1) {
+                if (boardContext.get(x, y+1).piece == Constants.Piece.NONE) moves += Move(Coordinate(x, y), Coordinate(x, y+1))
+                if (boardContext.get(x, y+2).piece == Constants.Piece.NONE) moves += Move(Coordinate(x, y), Coordinate(x, y+2))
+            } else if (y < 7) {
+                if (boardContext.get(x, y+1).piece == Constants.Piece.NONE) moves += Move(Coordinate(x, y), Coordinate(x, y+1))
+            }
+
+            if (x > 0 && y < 7 && boardContext.get(x-1, y+1).piece != Constants.Piece.NONE) moves += Move(Coordinate(x, y), Coordinate(x-1, y+1))
+            if (x < 7 && y < 7 && boardContext.get(x+1, y+1).piece != Constants.Piece.NONE) moves += Move(Coordinate(x, y), Coordinate(x+1, y+1))
+
+            if (y == 6) {
+                if (x > 0 && boardContext.get(x-1, y).piece == Constants.Piece.PAWN && boardContext.get(x-1, y-1).piece == Constants.Piece.NONE && boardContext.get(x-1, y).moveCount == 1 && boardContext.get(x-1, y).hasJustMoved) moves += Move(Coordinate(x, y), Coordinate(x-1, y+1), isEnPassant = true)
+                if (x < 7 && boardContext.get(x+1, y).piece == Constants.Piece.PAWN && boardContext.get(x+1, y-1).piece == Constants.Piece.NONE && boardContext.get(x+1, y).moveCount == 1 && boardContext.get(x+1, y).hasJustMoved) moves += Move(Coordinate(x, y), Coordinate(x+1, y+1), isEnPassant = true)
+            }
         }
 
         return moves
     }
 
-    private fun getValidMovesRook(x: Int, y: Int): List<Pair<Int, Int>> {
-        val moves: MutableList<Pair<Int, Int>> = mutableListOf()
+    private fun getValidMovesRook(x: Int, y: Int): List<Move> {
+        val moves: MutableList<Move> = mutableListOf()
 
         val directions: List<Pair<Int, Int>> = listOf(
             -1 to 0, 1 to 0, 0 to -1, 0 to 1
@@ -71,7 +88,7 @@ class MoveValidator(private val boardContext: ChessBoard) {
             var i = x + dx
             var j = y + dy
             while (i in 0..7 && j >= 0 && j < 8) {
-                moves += i to j
+                moves += Move(Coordinate(x, y), Coordinate(i, j), isCapture = false, isCastle = false, isEnPassant = false)
                 if (boardContext.get(i, j).piece != Constants.Piece.NONE) break
                 i += dx
                 j += dy
@@ -81,8 +98,8 @@ class MoveValidator(private val boardContext: ChessBoard) {
         return moves
     }
 
-    private fun getValidMovesKing(x: Int, y: Int): List<Pair<Int, Int>> {
-        val moves: MutableList<Pair<Int, Int>> = mutableListOf()
+    private fun getValidMovesKing(x: Int, y: Int): List<Move> {
+        val moves: MutableList<Move> = mutableListOf()
 
         val directions: List<Pair<Int, Int>> = listOf(
             -1 to -1, 1 to -1, -1 to 1, 1 to 1,
@@ -93,7 +110,7 @@ class MoveValidator(private val boardContext: ChessBoard) {
             val i = x + dx
             val j = y + dy
             if (i in 0..7 && j >= 0 && j < 8) {
-                moves += i to j
+                moves += Move(Coordinate(x, y), Coordinate(i, j), isCapture = false, isCastle = false, isEnPassant = false)
             }
         }
 
@@ -112,7 +129,7 @@ class MoveValidator(private val boardContext: ChessBoard) {
                 }
 
                 if (canCastle) {
-                    moves += x-2 to y
+                    moves += Move(Coordinate(x, y), Coordinate(x-2, y), isCastle = true)
                 }
             }
 
@@ -126,32 +143,31 @@ class MoveValidator(private val boardContext: ChessBoard) {
                 }
 
                 if (canCastle) {
-                    moves += x+2 to y
+                    moves += Move(Coordinate(x, y), Coordinate(x+2, y), isCastle = true)
                 }
             }
-
         }
 
         return moves
     }
 
-    private fun getValidMovesKnight(x: Int, y: Int): List<Pair<Int, Int>> {
-        val moves: MutableList<Pair<Int, Int>> = mutableListOf()
+    private fun getValidMovesKnight(x: Int, y: Int): List<Move> {
+        val moves: MutableList<Move> = mutableListOf()
 
-        if (x > 1 && y > 0) moves += x-2 to y-1
-        if (x > 1 && y < 7) moves += x-2 to y+1
-        if (x < 6 && y > 0) moves += x+2 to y-1
-        if (x < 6 && y < 7) moves += x+2 to y+1
-        if (x > 0 && y > 1) moves += x-1 to y-2
-        if (x > 0 && y < 6) moves += x-1 to y+2
-        if (x < 7 && y > 1) moves += x+1 to y-2
-        if (x < 7 && y < 6) moves += x+1 to y+2
+        if (x > 1 && y > 0) moves += Move(Coordinate(x, y), Coordinate(x-2, y-1))
+        if (x > 1 && y < 7) moves += Move(Coordinate(x, y), Coordinate(x-2, y+1))
+        if (x < 6 && y > 0) moves += Move(Coordinate(x, y), Coordinate(x+2, y-1))
+        if (x < 6 && y < 7) moves += Move(Coordinate(x, y), Coordinate(x+2, y+1))
+        if (x > 0 && y > 1) moves += Move(Coordinate(x, y), Coordinate(x-1, y-2))
+        if (x > 0 && y < 6) moves += Move(Coordinate(x, y), Coordinate(x-1, y+2))
+        if (x < 7 && y > 1) moves += Move(Coordinate(x, y), Coordinate(x+1, y-2))
+        if (x < 7 && y < 6) moves += Move(Coordinate(x, y), Coordinate(x+1, y+2))
 
         return moves
     }
 
-    private fun getValidMovesBishop(x: Int, y: Int): List<Pair<Int, Int>> {
-        val moves: MutableList<Pair<Int, Int>> = mutableListOf()
+    private fun getValidMovesBishop(x: Int, y: Int): List<Move> {
+        val moves: MutableList<Move> = mutableListOf()
 
         val directions: List<Pair<Int, Int>> = listOf(
             -1 to -1, 1 to -1, -1 to 1, 1 to 1
@@ -161,7 +177,7 @@ class MoveValidator(private val boardContext: ChessBoard) {
             var  i = x + dx
             var j = y + dy
             while (i in 0..7 && j >= 0 && j < 8) {
-                moves += i to j
+                moves += Move(Coordinate(x, y), Coordinate(i, j), isCapture = false, isCastle = false, isEnPassant = false)
                 if (boardContext.get(i, j).piece != Constants.Piece.NONE) break
                 i += dx
                 j += dy
@@ -171,8 +187,8 @@ class MoveValidator(private val boardContext: ChessBoard) {
         return moves
     }
 
-    private fun getValidMovesQueen(x: Int, y: Int): List<Pair<Int, Int>> {
-        val moves: MutableList<Pair<Int, Int>> = mutableListOf()
+    private fun getValidMovesQueen(x: Int, y: Int): List<Move> {
+        val moves: MutableList<Move> = mutableListOf()
 
         val directions: List<Pair<Int, Int>> = listOf(
             -1 to -1, 1 to -1, -1 to 1, 1 to 1,
@@ -183,7 +199,7 @@ class MoveValidator(private val boardContext: ChessBoard) {
             var i = x + dx
             var j = y + dy
             while (i in 0..7 && j >= 0 && j < 8) {
-                moves += i to j
+                moves += Move(Coordinate(x, y), Coordinate(i, j), isCapture = false, isCastle = false, isEnPassant = false)
                 if (boardContext.get(i, j).piece != Constants.Piece.NONE) break
                 i += dx
                 j += dy
