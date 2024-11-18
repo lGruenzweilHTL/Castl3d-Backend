@@ -100,4 +100,11 @@ class ChessFieldPieceData(var piece: Int, var color: Int, var moveCount: Int, va
     fun isPiece(piece: Int): Boolean {
         return this.piece == piece
     }
+
+    /**
+     * Returns the object as a string.
+     */
+    override fun toString(): String {
+        return "ChessFieldPieceData(piece=$piece, color=$color, moveCount=$moveCount, hasJustMoved=$hasJustMoved)"
+    }
 }
