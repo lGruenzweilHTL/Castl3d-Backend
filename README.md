@@ -70,5 +70,5 @@ The board api is well documented and easy to use, so you can easily implement yo
 ## Todo
 - [ ] Implement a more advanced bot with a better strategy.
 - [ ] Add promotion support.
-- [ ] Fix castling and en passant moves.
+- [x] Fix castling and en passant moves.
 - [ ] Add support for selecting color.
