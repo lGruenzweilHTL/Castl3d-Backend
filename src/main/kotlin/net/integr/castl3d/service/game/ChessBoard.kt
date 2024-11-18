@@ -215,7 +215,7 @@ class ChessBoard(val messagingTemplate: SimpMessageSendingOperations?, val user:
     }
 
     private fun copy(): ChessBoard {
-        val newBoard = ChessBoard(messagingTemplate, user)
+        val newBoard = ChessBoard(null, null)
         for (i in 0..7) {
             for (j in 0..7) {
                 newBoard.set(i, j, get(i, j).piece, get(i, j).color, get(i, j).moveCount, get(i, j).hasJustMoved)
@@ -412,6 +412,7 @@ class ChessBoard(val messagingTemplate: SimpMessageSendingOperations?, val user:
     }
 
     private fun updateBoard(x: Int, y: Int, piece: Int, color: Int, moveCount: Int, hasJustMoved: Boolean) {
+        if (messagingTemplate == null || user == null) return
         send(SetBoardS2CPacket(x, y, piece, color, moveCount, hasJustMoved), "set_board")
     }
 
