@@ -45,7 +45,7 @@ class MoveValidator(private val boardContext: ChessBoard) {
         if (boardContext.get(x, y).color == Constants.Color.WHITE) {
             if (y == 6) {
                 if (boardContext.get(x, y-1).piece == Constants.Piece.NONE) moves += Move(Coordinate(x, y), Coordinate(x, y-1))
-                if (boardContext.get(x, y-2).piece == Constants.Piece.NONE) moves += Move(Coordinate(x, y), Coordinate(x, y-2))
+                if (boardContext.get(x, y-1).piece == Constants.Piece.NONE && boardContext.get(x, y-2).piece == Constants.Piece.NONE) moves += Move(Coordinate(x, y), Coordinate(x, y-2))
             } else if (y > 0) {
                 if (boardContext.get(x, y-1).piece == Constants.Piece.NONE) moves += Move(Coordinate(x, y), Coordinate(x, y-1))
             }
@@ -60,7 +60,7 @@ class MoveValidator(private val boardContext: ChessBoard) {
         } else {
             if (y == 1) {
                 if (boardContext.get(x, y+1).piece == Constants.Piece.NONE) moves += Move(Coordinate(x, y), Coordinate(x, y+1))
-                if (boardContext.get(x, y+2).piece == Constants.Piece.NONE) moves += Move(Coordinate(x, y), Coordinate(x, y+2))
+                if (boardContext.get(x, y+1).piece == Constants.Piece.NONE && boardContext.get(x, y+2).piece == Constants.Piece.NONE) moves += Move(Coordinate(x, y), Coordinate(x, y+2))
             } else if (y < 7) {
                 if (boardContext.get(x, y+1).piece == Constants.Piece.NONE) moves += Move(Coordinate(x, y), Coordinate(x, y+1))
             }
